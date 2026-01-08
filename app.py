@@ -117,6 +117,21 @@ def show_welcome_screen():
         <p style='font-size: 1.5rem; color: #555; font-style: italic;'>{t('tagline')}</p>
     </div>
     """, unsafe_allow_html=True)
+
+    # --- ABOUT SECTION ---
+    with st.expander("ℹ️ About the App / ऐप के बारे में"):
+        st.markdown("""
+        **Farmer Super App** is your all-in-one digital companion for modern farming.
+        
+        **Features:**
+        - 🌱 **Crop Doctor:** AI-based disease diagnosis.
+        - 🧪 **Fertilizer Advisor:** Personalized nutrient recommendations.
+        - ☁️ **Weather:** Real-time location-based forecasts.
+        - 💰 **Mandi Prices:** Live market rates from nearby mandis.
+        - 🤖 **AI Agronomist:** 24/7 Chatbot for any farming question.
+        
+        *Built with ❤️ for Indian Farmers.*
+        """)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
