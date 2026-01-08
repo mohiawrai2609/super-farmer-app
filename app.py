@@ -250,11 +250,11 @@ def show_dashboard():
     st.markdown(f"### 🏭 Trusted Brands")
     b1, b2, b3, b4 = st.columns(4)
     with b1:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Syngenta_logo.svg/320px-Syngenta_logo.svg.png", width=80)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Syngenta_logo.svg/320px-Syngenta_logo.svg.png", width=80)
     with b2:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Bayer_logo.svg/320px-Bayer_logo.svg.png", width=80)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Logo_Bayer.svg/320px-Logo_Bayer.svg.png", width=80)
     with b3:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/UPL_Limited_Logo.svg/320px-UPL_Limited_Logo.svg.png", width=80)
+        st.image("https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/UPL_official_logo.svg/320px-UPL_official_logo.svg.png", width=80)
     with b4:
         st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/320px-Tata_logo.svg.png", width=70)
 
