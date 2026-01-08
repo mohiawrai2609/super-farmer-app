@@ -736,9 +736,9 @@ def render_bottom_nav():
             <span class="nav-icon">🤖</span>
             <span class="nav-text">Chat</span>
         </a>
-        <a href="10_👤_User_Profile" target="_self" class="nav-item">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">Profile</span>
+        <a href="#" target="_self" class="nav-item">
+            <span class="nav-icon">ℹ️</span>
+            <span class="nav-text">About</span>
         </a>
     </div>
     """, unsafe_allow_html=True)
