@@ -30,13 +30,13 @@ if 'active_user' not in st.session_state:
     st.session_state.active_user = None 
     # Check for auto-login
     # We check if 'last_active_phone' exists in metadata
-    last_phone = st.session_state.user_data.get('meta', {}).get('last_active_phone')
-    if last_phone and str(last_phone) in st.session_state.user_data:
-        # Check if the user object is valid
-        user_obj = st.session_state.user_data[str(last_phone)]
-        if user_obj:
-            st.session_state.active_user = user_obj
-            st.session_state.current_view = 'dashboard'
+    # last_phone = st.session_state.user_data.get('meta', {}).get('last_active_phone')
+    # if last_phone and str(last_phone) in st.session_state.user_data:
+    #     # Check if the user object is valid
+    #     user_obj = st.session_state.user_data[str(last_phone)]
+    #     if user_obj:
+    #         st.session_state.active_user = user_obj
+    #         st.session_state.current_view = 'dashboard'
 
 if 'language' not in st.session_state:
     st.session_state.language = 'English' # Default
