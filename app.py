@@ -193,7 +193,7 @@ def show_dashboard():
 
     # --- SEARCH BAR ---
     # --- SEARCH BAR ---
-    search_query = st.text_input("Search", placeholder="Search for products, crops, or advice...  🎤", label_visibility="collapsed")
+    search_query = st.text_input("Search", placeholder="Search for products, crops, or advice...  ", label_visibility="collapsed")
     
     if search_query:
         q = search_query.lower()
@@ -256,7 +256,7 @@ def show_dashboard():
     with b3:
         st.markdown('<div class="dashboard-card" style="padding: 10px; display: flex; justify-content: center;"><img src="https://companieslogo.com/img/orig/UPL-79057b56.png" width="80"></div>', unsafe_allow_html=True)
     with b4:
-        st.markdown('<div class="dashboard-card" style="padding: 10px; display: flex; justify-content: center;"><img src="https://1000logos.net/wp-content/uploads/2021/05/Dhanuka-Agritech-logo.png" width="80"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="dashboard-card" style="padding: 10px; display: flex; justify-content: center;"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/95/Tata_Group_logo.svg/1200px-Tata_Group_logo.svg.png" width="80"></div>', unsafe_allow_html=True)
 
     # Feature Grid - Section 1: Farm Management (Kheti Badi)
     st.markdown(f"### 🚜 {t('quick_actions')}")
