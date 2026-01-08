@@ -674,3 +674,71 @@ def save_db(data):
             json.dump(data, f)
     except Exception as e:
         print(f"Error saving DB: {e}")
+
+# --- BOTTOM NAVIGATION ---
+def render_bottom_nav():
+    st.markdown("""
+    <style>
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 8px 0;
+        z-index: 99999;
+        border-top: 1px solid #e0e0e0;
+    }
+    .nav-item {
+        text-align: center;
+        color: #757575 !important;
+        text-decoration: none !important;
+        font-size: 0.75rem;
+        flex: 1;
+        transition: color 0.3s;
+    }
+    .nav-item:hover {
+        color: #2E7D32 !important;
+        background-color: rgba(46, 125, 50, 0.05);
+        border-radius: 8px;
+    }
+    .nav-icon {
+        font-size: 1.4rem;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .nav-text {
+        display: block;
+        font-weight: 500;
+    }
+    /* Hide Streamlit footer to avoid overlap */
+    footer {visibility: hidden !important;}
+    </style>
+
+    <div class="bottom-nav">
+        <a href="/" target="_self" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Home</span>
+        </a>
+        <a href="Crop_Recommendation" target="_self" class="nav-item">
+            <span class="nav-icon">🌱</span>
+            <span class="nav-text">Crops</span>
+        </a>
+        <a href="Weather_Info" target="_self" class="nav-item">
+            <span class="nav-icon">☁️</span>
+            <span class="nav-text">Weather</span>
+        </a>
+        <a href="AI_Agronomist" target="_self" class="nav-item">
+            <span class="nav-icon">🤖</span>
+            <span class="nav-text">Chat</span>
+        </a>
+        <a href="10_👤_User_Profile" target="_self" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Profile</span>
+        </a>
+    </div>
+    """, unsafe_allow_html=True)

@@ -20,6 +20,10 @@ st.set_page_config(
 # Apply Custom "Mobile App" Styles
 apply_custom_style()
 
+# Render Bottom Navigation (Sticky Footer)
+from utils import render_bottom_nav
+render_bottom_nav()
+
 # --- SESSION STATE INITIALIZATION ---
 if 'current_view' not in st.session_state:
     st.session_state.current_view = 'welcome' 
