@@ -226,7 +226,7 @@ def get_fertilizer_recommendation(N, P, K, crop, image_data=None, pest_issue=Non
             inputs = [prompt]
             
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-1.5-flash',
             contents=inputs
         )
         text = response.text
@@ -494,7 +494,7 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
              inputs = [prompt]
         
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-1.5-flash',
             contents=inputs
         )
         text = response.text
@@ -543,7 +543,7 @@ def get_ai_response(prompt, api_key=None):
     """
     try:
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-1.5-flash',
             contents=prompt
         )
         return response.text
