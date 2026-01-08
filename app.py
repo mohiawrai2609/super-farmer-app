@@ -246,17 +246,17 @@ def show_dashboard():
     else:
         st.warning(f"{t('weather_err')}: {error}")
 
-    # --- BRAND PARTNERS SECTION (New from Screenshot) ---
+    # --- BRAND PARTNERS SECTION ---
     st.markdown(f"### 🏭 Trusted Brands")
     b1, b2, b3, b4 = st.columns(4)
     with b1:
-        st.markdown('<div class="dashboard-card" style="padding: 10px; display: flex; justify-content: center;"><img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Syngenta_logo.svg" width="80"></div>', unsafe_allow_html=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Syngenta_logo.svg/320px-Syngenta_logo.svg.png", width=80)
     with b2:
-        st.markdown('<div class="dashboard-card" style="padding: 10px; display: flex; justify-content: center;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Bayer_logo.svg/1200px-Bayer_logo.svg.png" width="80"></div>', unsafe_allow_html=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Bayer_logo.svg/320px-Bayer_logo.svg.png", width=80)
     with b3:
-        st.markdown('<div class="dashboard-card" style="padding: 10px; display: flex; justify-content: center;"><img src="https://companieslogo.com/img/orig/UPL-79057b56.png" width="80"></div>', unsafe_allow_html=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/UPL_Limited_Logo.svg/320px-UPL_Limited_Logo.svg.png", width=80)
     with b4:
-        st.markdown('<div class="dashboard-card" style="padding: 10px; display: flex; justify-content: center;"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/95/Tata_Group_logo.svg/1200px-Tata_Group_logo.svg.png" width="80"></div>', unsafe_allow_html=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/320px-Tata_logo.svg.png", width=70)
 
     # Feature Grid - Section 1: Farm Management (Kheti Badi)
     st.markdown(f"### 🚜 {t('quick_actions')}")
