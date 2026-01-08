@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import os
 from dotenv import load_dotenv
 import numpy as np
@@ -11,7 +11,7 @@ import pandas as pd
 load_dotenv()
 
 # --- GEMINI AI CONFIGURATION ---
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 def get_crop_recommendation(N, P, K, temperature, humidity, ph, rainfall):
     """
@@ -33,7 +33,7 @@ def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain):
     Uses Gemini to explain WHY this crop was chosen.
     """
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
+        # model = genai.GenerativeModel('gemini-flash-latest') OLD
         prompt = f"""
         Act as an expert Agronomist. 
         I have recommended '{predicted_crop}' for a farm with:
@@ -42,7 +42,10 @@ def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain):
         
         Explain in 2 simple sentences why {predicted_crop} is a good choice.
         """
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-2.0-flash', 
+            contents=prompt
+        )
         return response.text
     except Exception as e:
         return "AI Explanation unavailable. Check internet connection."
@@ -167,11 +170,10 @@ def get_fertilizer_recommendation(N, P, K, crop, image_data=None, pest_issue=Non
     """
     # 1. Try AI Approach
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
-        
         # Instruction for language
         lang_instruction = f"IMPORTANT: PROVIDE THE RESPONSE IN {language} LANGUAGE." if language != "English" else ""
         
+        inputs = []
         if image_data:
             # Vision Inputs
             prompt = f'''
@@ -198,7 +200,7 @@ def get_fertilizer_recommendation(N, P, K, crop, image_data=None, pest_issue=Non
             TIP: <General Advice>
             PEST: <Pest Control Suggestion>
             '''
-            inputs = [prompt, image_data]
+            inputs = [image_data, prompt] # Image first usually helps, or list
         else:
             # Text Inputs
             prompt = f'''
@@ -223,7 +225,10 @@ def get_fertilizer_recommendation(N, P, K, crop, image_data=None, pest_issue=Non
             '''
             inputs = [prompt]
             
-        response = model.generate_content(inputs)
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=inputs
+        )
         text = response.text
         
         # Robust Regex Parsing
@@ -424,8 +429,6 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
     error = None
     
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
-        
         # Base context for both modes
         scientific_context = f"""
         Context:
@@ -441,6 +444,7 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
         - Weather Outlook: {weather}
         """
 
+        inputs = []
         if image_data:
              # VISION MODEL
              prompt = f"""
@@ -462,7 +466,7 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
              PRODUCTION: <Number only>
              REASON: <Scientific explanation in {language}>
              """
-             inputs = [prompt, image_data]
+             inputs = [image_data, prompt]
              
         else:
              # TEXT MODEL
@@ -489,7 +493,10 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
              """
              inputs = [prompt]
         
-        response = model.generate_content(inputs)
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=inputs
+        )
         text = response.text
         
         import re
@@ -535,8 +542,10 @@ def get_ai_response(prompt, api_key=None):
     Uses 'gemini-flash-latest'.
     """
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=prompt
+        )
         return response.text
     except Exception as e:
         return f"I am having trouble connecting to the satellite. Please try again. (Error: {str(e)})"
