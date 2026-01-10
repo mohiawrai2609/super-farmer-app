@@ -36,9 +36,22 @@ import random
 import time
 import random
 
+# Robust Generation Function
+import time
+import random
+
+# Cached internal function for text-only prompts to save quota
+@st.cache_data(ttl=3600, show_spinner=False)
+def _cached_ai_call(model_name, prompt_text):
+    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt_text
+    )
+    return response.text
+
 def generate_ai_response_v2(prompt):
     # Valid Models - Updated based on actual available list
-    # Removed gemini-1.0-pro/1.5-flash as they are not in the current listing
     models = [
         "gemini-2.0-flash",
         "gemini-2.0-flash-lite", 
@@ -46,12 +59,22 @@ def generate_ai_response_v2(prompt):
     ]
     last_error = None
     
+    # Try to use Cache if prompt is simple string
+    if isinstance(prompt, str):
+        try:
+            # Try the first model with cache
+            return _cached_ai_call(models[0], prompt)
+        except Exception:
+            pass # If cache/call fails, fall through to robust loop
+
     for attempt, model_name in enumerate(models):
         try:
             # Exponential Backoff with Jitter
             wait_time = 1 + (attempt * 2) + random.uniform(0, 1)
             time.sleep(wait_time)
             
+            # Direct call (handling lists/images if needed)
+            client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
             response = client.models.generate_content(
                 model=model_name,
                 contents=prompt
@@ -63,15 +86,14 @@ def generate_ai_response_v2(prompt):
                 
         except Exception as e:
             last_error = e
-            # print(f"Model {model_name} failed: {e}")
             continue
             
     # --- SIMULATED FALLBACK (When Google AI is down/exhausted) ---
-    fallback_msg = "AI is experiencing high traffic (Quota Limit). Please wait 1 minute."
+    fallback_msg = "⚠️ AI Quota Exceeded. Showing offline backup advice."
     if last_error:
-        fallback_msg += f" (Last Error: {str(last_error)})"
+        print(f"AI Error: {last_error}")
         
-    return f"{fallback_msg}\n\nSimulated Advice: Based on your inputs, the crop conditions look stable. Ensure adequate water and standard nutrient application."
+    return f"{fallback_msg}\n\nBackup Advice: Ensure soil moisture is consistent and check for visible pests. Apply standard NPK if growth is slow."
 
 def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain):
     """
