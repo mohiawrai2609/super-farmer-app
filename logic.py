@@ -37,12 +37,12 @@ import time
 import random
 
 def generate_ai_response_v2(prompt):
-    # Valid Models - Prioritize Stable Models
-    # removing gemini-2.0-flash explicitly to avoid Quota errors
+    # Valid Models - Updated based on actual available list
+    # Removed gemini-1.0-pro/1.5-flash as they are not in the current listing
     models = [
-        "gemini-1.5-flash", 
-        "gemini-1.5-pro",
-        "gemini-1.0-pro"
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite", 
+        "gemini-flash-latest"
     ]
     last_error = None
     
