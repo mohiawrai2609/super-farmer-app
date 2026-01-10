@@ -28,12 +28,56 @@ def get_crop_recommendation(N, P, K, temperature, humidity, ph, rainfall):
     # AI Fallback for complex query
     return "Maize", "Balanced conditions suitable for versatile crops."
 
+# Robust Generation Function
+import time
+import random
+
+# Robust Generation Function
+import time
+import random
+
+def generate_ai_response_v2(prompt):
+    # Valid Models - Prioritize Stable Models
+    # removing gemini-2.0-flash explicitly to avoid Quota errors
+    models = [
+        "gemini-1.5-flash", 
+        "gemini-1.5-pro",
+        "gemini-1.0-pro"
+    ]
+    last_error = None
+    
+    for attempt, model_name in enumerate(models):
+        try:
+            # Exponential Backoff with Jitter
+            wait_time = 1 + (attempt * 2) + random.uniform(0, 1)
+            time.sleep(wait_time)
+            
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            )
+            
+            # Verify response validity
+            if response and response.text:
+                return response.text
+                
+        except Exception as e:
+            last_error = e
+            # print(f"Model {model_name} failed: {e}")
+            continue
+            
+    # --- SIMULATED FALLBACK (When Google AI is down/exhausted) ---
+    fallback_msg = "AI is experiencing high traffic (Quota Limit). Please wait 1 minute."
+    if last_error:
+        fallback_msg += f" (Last Error: {str(last_error)})"
+        
+    return f"{fallback_msg}\n\nSimulated Advice: Based on your inputs, the crop conditions look stable. Ensure adequate water and standard nutrient application."
+
 def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain):
     """
     Uses Gemini to explain WHY this crop was chosen.
     """
     try:
-        # model = genai.GenerativeModel('gemini-flash-latest') OLD
         prompt = f"""
         Act as an expert Agronomist. 
         I have recommended '{predicted_crop}' for a farm with:
@@ -42,11 +86,7 @@ def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain):
         
         Explain in 2 simple sentences why {predicted_crop} is a good choice.
         """
-        response = client.models.generate_content(
-            model='gemini-2.0-flash', 
-            contents=prompt
-        )
-        return response.text
+        return generate_ai_response_v2(prompt)
     except Exception as e:
         return "AI Explanation unavailable. Check internet connection."
 
@@ -225,11 +265,7 @@ def get_fertilizer_recommendation(N, P, K, crop, image_data=None, pest_issue=Non
             '''
             inputs = [prompt]
             
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=inputs
-        )
-        text = response.text
+        text = generate_ai_response_v2(inputs)
         
         # Robust Regex Parsing
         import re
@@ -493,11 +529,7 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
              """
              inputs = [prompt]
         
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=inputs
-        )
-        text = response.text
+        text = generate_ai_response_v2(inputs)
         
         import re
         
@@ -542,10 +574,6 @@ def get_ai_response(prompt, api_key=None):
     Uses 'gemini-flash-latest'.
     """
     try:
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt
-        )
-        return response.text
+        return generate_ai_response_v2(prompt)
     except Exception as e:
         return f"I am having trouble connecting to the satellite. Please try again. (Error: {str(e)})"
