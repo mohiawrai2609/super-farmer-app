@@ -186,8 +186,16 @@ def get_mandi_prices(api_key, state, district, commodity):
                 if records:
                     is_live = True
                     for rec in records:
+                        try:
+                            modal = float(rec.get('modal_price', 0))
+                            min_p = float(rec.get('min_price', 0))
+                            max_p = float(rec.get('max_price', 0))
+                        except:
+                            modal = 0; min_p = 0; max_p = 0
+
                         data.append({
                             "Market": rec.get('market', 'Unknown'),
+                            "Min Price (₹/Qt)": min_p,
                             "Max Price (₹/Qt)": max_p,
                             "Modal Price (₹/Qt)": modal,
                             "Price (₹/Kg)": round(modal / 100, 2),
