@@ -188,9 +188,9 @@ def get_mandi_prices(api_key, state, district, commodity):
                     for rec in records:
                         data.append({
                             "Market": rec.get('market', 'Unknown'),
-                            "Min Price": rec.get('min_price', 0),
-                            "Max Price": rec.get('max_price', 0),
-                            "Modal Price": rec.get('modal_price', 0),
+                            "Max Price (₹/Qt)": max_p,
+                            "Modal Price (₹/Qt)": modal,
+                            "Price (₹/Kg)": round(modal / 100, 2),
                             "Date": rec.get('arrival_date', 'Today')
                         })
         except Exception as e:
@@ -217,9 +217,10 @@ def get_mandi_prices(api_key, state, district, commodity):
             
             data.append({
                 "Market": mkt,
-                "Min Price": min_p,
-                "Max Price": max_p,
-                "Modal Price": modal,
+                "Min Price (₹/Qt)": min_p,
+                "Max Price (₹/Qt)": max_p,
+                "Modal Price (₹/Qt)": modal,
+                "Price (₹/Kg)": round(modal / 100, 2),
                 "Date": today
             })
             
