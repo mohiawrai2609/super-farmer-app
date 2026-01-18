@@ -9,8 +9,8 @@ load_dotenv()
 
 st.set_page_config(page_title="AI Agronomist", page_icon="🤖", layout="wide")
 
-# Apply Global Style - CLEAR BACKGROUND
-apply_custom_style(blur_bg=False)
+# Apply Global Style - Blurred Background as base
+apply_custom_style(blur_bg=True)
 
 # --- STATE INITIALIZATION ---
 if "messages" not in st.session_state:
@@ -51,20 +51,36 @@ def get_base64_of_bin_file(bin_file):
 bg_img_path = os.path.join("assets", "bg_ai_robot_v2.png")
 if os.path.exists(bg_img_path):
     bin_str = get_base64_of_bin_file(bg_img_path)
-    # LIGHT OVERLAY for readability, but NO BLUR and NO DARK SHADE
     bg_image_css = f"""
     [data-testid="stAppViewContainer"], .stApp {{
-        background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)), url("data:image/png;base64,{bin_str}") no-repeat center center fixed !important;
+        background: url("data:image/png;base64,{bin_str}") no-repeat center center fixed !important;
         background-size: cover !important;
         background-attachment: fixed !important;
     }}
+    .stApp::before {{
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.4); /* Subtle dark overlay */
+        backdrop-filter: blur(5px); /* The "little blur" requested */
+        -webkit-backdrop-filter: blur(5px);
+        z-index: -1;
+    }}
     """
 else:
-    bg_image_css = f"""
-    [data-testid="stAppViewContainer"], .stApp {{
-        background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)), url("https://images.unsplash.com/photo-1625246333195-58f214f063ce?q=80&w=2600") no-repeat center center fixed !important;
+    bg_image_css = """
+    [data-testid="stAppViewContainer"], .stApp {
+        background: url("https://images.unsplash.com/photo-1625246333195-58f214f063ce?q=80&w=2600") no-repeat center center fixed !important;
         background-size: cover !important;
-    }}
+    }
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(6px);
+        z-index: -1;
+    }
     """
 
 # --- CSS INJECTION ---
@@ -97,14 +113,16 @@ header[data-testid="stHeader"] {{
     padding: 10px !important;
 }}
 
-/* Assistant Bubble - Dark Glass for contrast against clear background */
+/* Assistant Bubble - Transparent Dark Glass (Vision Pro Style) */
 [data-testid="stChatMessage"][data-testid="assistant"] {{
-    background: rgba(0, 0, 0, 0.7) !important; 
-    backdrop-filter: blur(10px) !important;
+    background: rgba(0, 0, 0, 0.6) !important; 
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-radius: 0 20px 20px 20px !important;
     margin-right: 40px !important;
     color: white !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
 }}
 
 /* User Bubble - Vibrant Green */
