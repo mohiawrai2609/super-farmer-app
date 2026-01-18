@@ -11,20 +11,106 @@ def get_base64_of_bin_file(bin_file):
     return base64.b64encode(data).decode()
 
 st.set_page_config(page_title=t('irrigation'), page_icon="💧", layout="wide")
-apply_custom_style()
 
+# Apply Global Style (for Sidebar hiding etc.)
+# Passing blur_bg=False because this page sets its own background
+apply_custom_style(blur_bg=False)
+
+# --- LOAD BACKGROUND IMAGE ---
+bg_image_path = os.path.join(os.getcwd(), "assets", "irrigation_bg_v2.png")
+
+try:
+    if os.path.exists(bg_image_path):
+        img_base64 = get_base64_of_bin_file(bg_image_path)
+        
+        # Using a stronger overlay for readability against the sharp image
+        bg_style = f"""
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9)), url("data:image/png;base64,{img_base64}") center center / cover no-repeat !important;
+        """
+    else:
+        # Fallback if image missing
+        bg_style = "background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%) !important;"
+except Exception as e:
+    bg_style = "background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%) !important;"
+
+
+# --- HEADER (Vision Pro Style) ---
 st.markdown(f"""
-<div class="glass-container">
-    <div class="header-card" style="background: transparent; box-shadow: none; border: none; padding: 0;">
-        <div style="display:flex; justify-content:center; align-items:center; gap:20px;">
-            <img src="https://cdn-icons-png.flaticon.com/512/3214/3214746.png" width="80" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-            <div>
-                <h1 style="font-size: 2.5rem; margin:0; color: #1B5E20; text-shadow: 0 1px 2px rgba(255,255,255,0.5);">{t('irrigation')}</h1>
-                <p style="color: #2E7D32; font-size: 1.1rem; margin:0; font-style: italic; font-weight: 600;">{t('smart_water')}</p>
-            </div>
+<div class="header-card">
+    <div style="display:flex; justify-content:center; align-items:center; gap:20px;">
+        <img src="https://cdn-icons-png.flaticon.com/512/3214/3214746.png" width="80" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+        <div>
+            <h1 style="font-size: 2.5rem; margin:0;">{t('irrigation')}</h1>
+             <p style="color: #EEE; font-size: 1.1rem; margin:0; font-style: italic;">{t('smart_water')}</p>
         </div>
     </div>
 </div>
+""", unsafe_allow_html=True)
+
+# --- CUSTOM STYLE FOR IRRIGATION HUB ---
+st.markdown(f"""
+<style>
+    /* 1. Page Background - Fresh Farm Green/Blue */
+    .stApp {{
+        background: #F1F8E9 !important;
+    }}
+    
+    /* 2. Inner Card Style - FARMER THEME */
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        {bg_style}
+        border: 2px solid #66BB6A;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(27, 94, 32, 0.2);
+        padding: 30px;
+    }}
+    
+    /* 3. Text Styling - Dark Green for contrast */
+    div[data-testid="stVerticalBlockBorderWrapper"] label {{
+        color: #1B5E20 !important;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] p {{
+        color: #2E7D32 !important;
+        font-weight: 500;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] h3 {{
+        color: #1B5E20 !important;
+        font-weight: 800;
+        text-shadow: none;
+    }}
+    
+    /* 4. Input Fields - Clean White */
+    div[data-testid="stVerticalBlockBorderWrapper"] input {{
+        color: #1B5E20 !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #81C784;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] div[data-baseweb="select"] > div {{
+        background-color: #FFFFFF !important;
+        color: #1B5E20 !important;
+        border: 1px solid #81C784;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] div[data-baseweb="select"] span {{
+        color: #1B5E20 !important;
+    }}
+    
+    /* Calculate Button - Farm Green */
+    div[data-testid="stVerticalBlockBorderWrapper"] button {{
+        background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%) !important;
+        color: white !important;
+        font-weight: 800 !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] button p {{
+         color: #FFFFFF !important;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] button:hover {{
+        background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%) !important;
+        transform: translateY(-2px);
+    }}
+</style>
 """, unsafe_allow_html=True)
 
 # --- MAIN INPUT SECTION ---
