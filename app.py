@@ -45,6 +45,15 @@ if 'language' not in st.session_state:
 if st.session_state.active_user and 'language' in st.session_state.active_user:
     st.session_state.language = st.session_state.active_user['language']
 
+# --- HELPER FUNCTIONS ---
+def get_secret(key):
+    try:
+        if key in st.secrets:
+            return st.secrets[key]
+    except:
+        pass
+    return os.getenv(key)
+
 # --- NAVIGATION FUNCTIONS ---
 def navigate_to(view):
     st.session_state.current_view = view
@@ -342,14 +351,6 @@ def show_dashboard():
     </style>
     """, unsafe_allow_html=True)
 
-# Helper for secrets
-def get_secret(key):
-    try:
-        if key in st.secrets:
-            return st.secrets[key]
-    except:
-        pass
-    return os.getenv(key)
 
     # --- WEATHER BANNER ---
     weather_city = user.get('city', t('delhi'))
