@@ -234,3 +234,8 @@ if analyze_btn:
             """, unsafe_allow_html=True)
             
     st.markdown("</div>", unsafe_allow_html=True)
+
+# Render Bottom Navigation
+from utils import render_bottom_nav
+render_bottom_nav(active_tab='Crops')
+st.markdown("<br><br><br>", unsafe_allow_html=True)

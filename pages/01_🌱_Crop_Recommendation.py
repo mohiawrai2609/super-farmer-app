@@ -202,3 +202,8 @@ with col2:
     if st.session_state.get('weather_data'):
         with st.expander(t('view_raw')):
             st.json(st.session_state['weather_data'])
+
+# Render Bottom Navigation
+from utils import render_bottom_nav
+render_bottom_nav(active_tab='Crops')
+st.markdown("<br><br><br>", unsafe_allow_html=True)
