@@ -11,22 +11,65 @@ import pandas as pd
 load_dotenv()
 
 # --- GEMINI AI CONFIGURATION ---
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+def get_api_key():
+    try:
+        # Check Streamlit Cloud Secrets first
+        if "GOOGLE_API_KEY" in st.secrets:
+            return st.secrets["GOOGLE_API_KEY"]
+    except:
+        pass
+    # Fallback to local .env
+    return os.getenv("GOOGLE_API_KEY")
 
-def get_crop_recommendation(N, P, K, temperature, humidity, ph, rainfall):
+api_key = get_api_key()
+# Initialize client safely
+try:
+    if api_key:
+        client = genai.Client(api_key=api_key)
+    else:
+        client = None
+except Exception as e:
+    print(f"GenAI Client Init Error: {e}")
+    client = None
+
+def get_crop_recommendation(N, P, K, temperature, humidity, ph, rainfall, language='English'):
     """
     Hybrid Logic: Uses rule-based knowledge first, then AI if unsure.
     """
-    # ... (Keep existing simple rules or AI call)
-    # For now, let's delegate to AI for the "Smart" feel or use a simple dictionary
-    # Simplest Rule Base for demo speed:
-    if N > 100: return "Cotton", "High Nitrogen detected, good for cash crops."
-    if P > 50 and rainfall > 200: return "Rice", "High rainfall and phosphorus levels suitable for paddy."
-    if rainfall < 50: return "Millets", "Low rainfall condition detected. Drought-resistent crop."
-    if temperature < 20: return "Wheat", "Cooler temperature suitable for Rabi crops."
+    trans = {
+        'English': {
+            'Cotton': {'name': 'Cotton', 'reason': 'High Nitrogen detected, good for cash crops.'},
+            'Rice': {'name': 'Rice', 'reason': 'High rainfall and phosphorus levels suitable for paddy.'},
+            'Millets': {'name': 'Millets', 'reason': 'Low rainfall condition detected. Drought-resistent crop.'},
+            'Wheat': {'name': 'Wheat', 'reason': 'Cooler temperature suitable for Rabi crops.'},
+            'Maize': {'name': 'Maize', 'reason': 'Balanced conditions suitable for versatile crops.'}
+        },
+        'Hindi': {
+            'Cotton': {'name': 'कपास (Cotton)', 'reason': 'उच्च नाइट्रोजन पाया गया, नकदी फसलों के लिए अच्छा है।'},
+            'Rice': {'name': 'चावल (Rice)', 'reason': 'उच्च वर्षा और फास्फोरस का स्तर धान के लिए उपयुक्त है।'},
+            'Millets': {'name': 'बाजरा/मिलेट्स (Millets)', 'reason': 'कम वर्षा की स्थिति का पता चला। सूखा प्रतिरोधी फसल।'},
+            'Wheat': {'name': 'गेहूं (Wheat)', 'reason': 'ठंडा तापमान रबी फसलों के लिए उपयुक्त है।'},
+            'Maize': {'name': 'मक्का (Maize)', 'reason': 'बहुमुखी फसलों के लिए संतुलित स्थिति उपयुक्त है।'}
+        },
+        'Marathi': {
+            'Cotton': {'name': 'कापूस (Cotton)', 'reason': 'उच्च नत्र आढळले, नगदी पिकांसाठी चांगले.'},
+            'Rice': {'name': 'तांदूळ (Rice)', 'reason': 'जास्त पाऊस आणि स्फुरद पातळी भात शेतीसाठी योग्य आहे.'},
+            'Millets': {'name': 'बाजरी/मिलेट्स (Millets)', 'reason': 'कमी पावसाची स्थिती आढळली. दुष्काळ प्रतिरोधक पीक.'},
+            'Wheat': {'name': 'गहू (Wheat)', 'reason': 'कमी तापमान रबी पिकांसाठी योग्य आहे.'},
+            'Maize': {'name': 'मक्का (Maize)', 'reason': 'संतुलित स्थिती विविध पिकांसाठी योग्य आहे.'}
+        }
+    }
     
-    # AI Fallback for complex query
-    return "Maize", "Balanced conditions suitable for versatile crops."
+    l_map = trans.get(language, trans['English'])
+    
+    res_key = "Maize"
+    if N > 100: res_key = "Cotton"
+    elif P > 50 and rainfall > 200: res_key = "Rice"
+    elif rainfall < 50: res_key = "Millets"
+    elif temperature < 20: res_key = "Wheat"
+    
+    res = l_map.get(res_key, l_map['Maize'])
+    return res['name'], res['reason']
 
 # Robust Generation Function
 import time
@@ -43,19 +86,30 @@ import random
 # Cached internal function for text-only prompts to save quota
 @st.cache_data(ttl=3600, show_spinner=False)
 def _cached_ai_call(model_name, prompt_text):
-    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+    api_key = get_api_key()
+    if not api_key: return None
+    client = genai.Client(api_key=api_key)
     response = client.models.generate_content(
         model=model_name,
         contents=prompt_text
     )
     return response.text
 
-def generate_ai_response_v2(prompt):
-    # Valid Models - Updated based on actual available list
+def generate_ai_response_v2(prompt, language='English'):
+    # Adapt prompt for language
+    lang_instruction = f"\n\nIMPORTANT: Response must be entirely in {language} language."
+    if isinstance(prompt, str):
+        full_prompt = prompt + lang_instruction
+    else:
+        # If it's a list (e.g. for images), append instruction to the last text part or as a new part
+        full_prompt = prompt + [lang_instruction]
+    # Valid Models - Updated to latest available
     models = [
         "gemini-2.0-flash",
-        "gemini-2.0-flash-lite", 
-        "gemini-flash-latest"
+        "gemini-2.0-flash-lite-preview-02-05",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
+        "gemini-1.5-pro"
     ]
     last_error = None
     
@@ -63,7 +117,7 @@ def generate_ai_response_v2(prompt):
     if isinstance(prompt, str):
         try:
             # Try the first model with cache
-            return _cached_ai_call(models[0], prompt)
+            return _cached_ai_call(models[0], str(full_prompt))
         except Exception:
             pass # If cache/call fails, fall through to robust loop
 
@@ -74,10 +128,12 @@ def generate_ai_response_v2(prompt):
             time.sleep(wait_time)
             
             # Direct call (handling lists/images if needed)
-            client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+            api_key = get_api_key()
+            if not api_key: raise Exception("No API Key")
+            client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
                 model=model_name,
-                contents=prompt
+                contents=full_prompt
             )
             
             # Verify response validity
@@ -89,13 +145,52 @@ def generate_ai_response_v2(prompt):
             continue
             
     # --- SIMULATED FALLBACK (When Google AI is down/exhausted) ---
-    fallback_msg = "⚠️ AI Quota Exceeded. Showing offline backup advice."
+    fallback_trans = {
+        'English': '⚠️ AI Quota Exceeded. Showing offline backup advice.\n\nBackup Advice: Ensure soil moisture is consistent and check for visible pests. Apply standard NPK if growth is slow.',
+        'Hindi': '⚠️ AI कोटा समाप्त हो गया है। ऑफ़लाइन बैकअप सलाह दिखा रहा है।\n\nबैकअप सलाह: सुनिश्चित करें कि मिट्टी की नमी बनी रहे और दिखाई देने वाले कीटों की जांच करें। यदि विकास धीमा है तो मानक NPK का प्रयोग करें।',
+        'Marathi': '⚠️ AI कोटा संपला आहे. ऑफलाइन बॅकअप सल्ला दाखवत आहे.\n\nबॅकअप सल्ला: मातीचा ओलावा कायम असल्याची खात्री करा आणि दिसणाऱ्या कीटकांची तपासणी करा. वाढ संथ असल्यास मानक NPK वापरा.'
+    }
+    
     if last_error:
         print(f"AI Error: {last_error}")
         
-    return f"{fallback_msg}\n\nBackup Advice: Ensure soil moisture is consistent and check for visible pests. Apply standard NPK if growth is slow."
+    return fallback_trans.get(language, fallback_trans['English'])
 
-def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain):
+def generate_ai_response_stream(prompt, language='English'):
+    """
+    Generator version of AI response for streaming.
+    """
+    lang_instruction = f"\n\nIMPORTANT: Response must be entirely in {language} language."
+    full_prompt = prompt + lang_instruction if isinstance(prompt, str) else prompt + [lang_instruction]
+    
+    models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    
+    for model_name in models:
+        try:
+            api_key = get_api_key()
+            if not api_key: break
+            client = genai.Client(api_key=api_key)
+            responses = client.models.generate_content_stream(
+                model=model_name,
+                contents=full_prompt
+            )
+            for chunk in responses:
+                if chunk.text:
+                    yield chunk.text
+            return # Exit if successful
+        except Exception:
+            continue
+            
+    # Fallback if all fail
+    yield generate_ai_response_v2(prompt, language=language)
+
+def get_ai_response(prompt, api_key=None, language='English'):
+    """
+    General purpose AI Chat function. Supports streaming.
+    """
+    return generate_ai_response_stream(prompt, language=language)
+
+def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain, language='English'):
     """
     Uses Gemini to explain WHY this crop was chosen.
     """
@@ -108,22 +203,29 @@ def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain):
         
         Explain in 2 simple sentences why {predicted_crop} is a good choice.
         """
-        return generate_ai_response_v2(prompt)
+        return generate_ai_response_v2(prompt, language=language)
     except Exception as e:
-        return "AI Explanation unavailable. Check internet connection."
+        from utils import t
+        return t('ai_err_general')
 
-def get_weather_data(city, api_key):
+def get_weather_data(city, api_key, language='English'):
     """
     Fetches real weather data from OpenWeatherMap API with robust fallback.
     """
     if not api_key or "your_" in api_key:
-         return None, "API Key not configured."
+         from utils import t
+         return None, t('ai_err_api')
     
+    # Map app languages to OWM codes
+    lang_map = {'English': 'en', 'Hindi': 'hi', 'Marathi': 'mr'}
+    owm_lang = lang_map.get(language, 'en')
+
     base_url = "http://api.openweathermap.org/data/2.5/weather"
     params = {
         "q": city,
         "appid": api_key,
-        "units": "metric"
+        "units": "metric",
+        "lang": owm_lang
     }
     
     try:
@@ -134,7 +236,7 @@ def get_weather_data(city, api_key):
             # Fallback for "Interview Ready" stability
             mock_data = {
                 "main": {"temp": 28.5, "humidity": 65, "feels_like": 30.0},
-                "weather": [{"description": "Partly Cloudy", "icon": "02d"}],
+                "weather": [{"description": t('partly_cloudy'), "icon": "02d"}],
                 "wind": {"speed": 3.5},
                 "rain": {"1h": 0.0},
                 "sys": {"country": "IN"},
@@ -142,29 +244,56 @@ def get_weather_data(city, api_key):
                 "cod": 200,
                 "mock": True # Internal flag
             }
-            return mock_data, f"API Key error (401). Using SIMULATED live data for {city}."
+            from utils import t
+            return mock_data, f"{t('ai_err_api_401')} {city}."
     except Exception as e:
         return None, str(e)
 
-def get_market_trends_data(commodity="Rice"):
-    # Simulated trend data for ANY commodity
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+def get_market_trends_data(commodity="Rice", base_price=None):
+    # Simulated trend data for the LAST 7 DAYS
+    from datetime import datetime, timedelta
+    dates = []
+    prices = []
     
-    # Generate a base price based on a hash of the name for consistency
-    random.seed(commodity) 
-    base = random.randint(1500, 8000)
+    # If base_price is not provided, generate one based on commodity name
+    if base_price is None:
+        random.seed(commodity) 
+        base = random.randint(1800, 4500)
+    else:
+        base = int(float(base_price))
+        
+    current_date = datetime.now()
+    
+    # Create 7 days of data. The last day (today) should be exactly the 'base' price.
+    temp_prices = [base]
+    curr_p = base
+    for i in range(1, 7):
+        # Generate previous days by reversing the random walk
+        curr_p = curr_p + random.randint(-150, 150)
+        temp_prices.insert(0, int(curr_p))
+        
+    for i in range(6, -1, -1):
+        date_str = (current_date - timedelta(days=i)).strftime("%d-%b")
+        dates.append(date_str)
+    
     random.seed() # Reset seed
-    
-    prices = [base + random.randint(-200, 200) for _ in range(6)]
-    return {"dates": months, "prices": prices}
+    return {"dates": dates, "prices": temp_prices}
 
-def get_mandi_prices(api_key, state, district, commodity):
+def get_mandi_prices(api_key, state, district, commodity, language='English'):
     """
     Fetches real-time market prices from OGD India API.
     Fallback: Generates realistic simulated data if API Key is missing.
     """
     is_live = False
     data = []
+
+    # Internal mapping for consistency
+    trans = {
+        'English': {'market': 'Market', 'min': 'Min Price (₹/Qt)', 'max': 'Max Price (₹/Qt)', 'modal': 'Modal Price (₹/Qt)', 'kg': 'Price (₹/Kg)', 'date': 'Date', 'unknown': 'Unknown', 'today': 'Today', 'apmc': 'APMC', 'mandi': 'Mandi', 'rural': 'Rural Market', 'near': 'Near'},
+        'Hindi': {'market': 'बाजार', 'min': 'न्यूनतम मूल्य (₹/क्विंटल)', 'max': 'अधिकतम मूल्य (₹/क्विंटल)', 'modal': 'औसत मूल्य (₹/क्विंटल)', 'kg': 'कीमत (₹/किलो)', 'date': 'तारीख', 'unknown': 'अज्ञात', 'today': 'आज', 'apmc': 'एपीएमसी', 'mandi': 'मंडी', 'rural': 'ग्रामीण बाजार', 'near': 'पास वाले'},
+        'Marathi': {'market': 'बाजार', 'min': 'किमान भाव (₹/क्विंटल)', 'max': 'कमाल भाव (₹/क्विंटल)', 'modal': 'सरासरी भाव (₹/क्विंटल)', 'kg': 'भाव (₹/किलो)', 'date': 'तारीख', 'unknown': 'अज्ञात', 'today': 'आज', 'apmc': 'एपीएमसी', 'mandi': 'मंडी', 'rural': 'ग्रामीण बाजार', 'near': 'जवळचे'}
+    }
+    l_map = trans.get(language, trans['English'])
     
     # API URL for real-time data
     url = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
@@ -194,12 +323,12 @@ def get_mandi_prices(api_key, state, district, commodity):
                             modal = 0; min_p = 0; max_p = 0
 
                         data.append({
-                            "Market": rec.get('market', 'Unknown'),
-                            "Min Price (₹/Qt)": min_p,
-                            "Max Price (₹/Qt)": max_p,
-                            "Modal Price (₹/Qt)": modal,
-                            "Price (₹/Kg)": round(modal / 100, 2),
-                            "Date": rec.get('arrival_date', 'Today')
+                            l_map['market']: rec.get('market', l_map['unknown']),
+                            l_map['min']: min_p,
+                            l_map['max']: max_p,
+                            l_map['modal']: modal,
+                            l_map['kg']: round(modal / 100, 2),
+                            l_map['date']: rec.get('arrival_date', l_map['today'])
                         })
         except Exception as e:
             pass # Fallthrough to simulation
@@ -213,9 +342,9 @@ def get_mandi_prices(api_key, state, district, commodity):
         random.seed()
         
         # Generate fake market names based on the district/city
-        markets = [f"{district} APMC", f"{district} Mandi", f"{district} Rural Market", f"Near {district}"]
+        markets = [f"{district} {l_map['apmc']}", f"{district} {l_map['mandi']}", f"{district} {l_map['rural']}", f"{l_map['near']} {district}"]
         
-        today = datetime.now().strftime("%d/%m/%Y")
+        today_str = datetime.now().strftime("%d/%m/%Y")
         
         for mkt in markets:
             variation = random.uniform(-0.05, 0.05)
@@ -224,12 +353,12 @@ def get_mandi_prices(api_key, state, district, commodity):
             max_p = int(modal * 1.05)
             
             data.append({
-                "Market": mkt,
-                "Min Price (₹/Qt)": min_p,
-                "Max Price (₹/Qt)": max_p,
-                "Modal Price (₹/Qt)": modal,
-                "Price (₹/Kg)": round(modal / 100, 2),
-                "Date": today
+                l_map['market']: mkt,
+                l_map['min']: min_p,
+                l_map['max']: max_p,
+                l_map['modal']: modal,
+                l_map['kg']: round(modal / 100, 2),
+                l_map['date']: today_str
             })
             
     return data, is_live
@@ -296,7 +425,7 @@ def get_fertilizer_recommendation(N, P, K, crop, image_data=None, pest_issue=Non
             '''
             inputs = [prompt]
             
-        text = generate_ai_response_v2(inputs)
+        text = generate_ai_response_v2(inputs, language=language)
         
         # Robust Regex Parsing
         import re
@@ -339,7 +468,7 @@ def get_fertilizer_recommendation(N, P, K, crop, image_data=None, pest_issue=Non
         
     return fert, advice
 
-def calculate_irrigation(crop, soil_type, area):
+def calculate_irrigation(crop, soil_type, area, language='English'):
     """
     Calculates water requirement based on crop, soil, and area.
     """
@@ -351,23 +480,34 @@ def calculate_irrigation(crop, soil_type, area):
         "Cotton": 6000
     }
     
+    # Internal simple translation mapping if t() is not available in logic
+    # Better to return keys or pre-translated strings
+    trans = {
+        'English': {'liters': 'Liters', 'standard': 'Standard schedule (every 10-12 days).', 'sandy': 'Sandy soil drains fast. Irrigate frequently (every 5-7 days).', 'clayey': 'Clay retains water. Irrigate less frequently (every 12-15 days).', 'loamy': 'Loamy soil is balanced. Irrigate every 8-10 days.'},
+        'Hindi': {'liters': 'लीटर', 'standard': 'मानक कार्यक्रम (प्रत्येक 10-12 दिनों में)।', 'sandy': 'रेतीली मिट्टी तेजी से सूखती है। बार-बार सिंचाई करें (प्रत्येक 5-7 दिनों में)।', 'clayey': 'मिट्टी पानी को सोख लेती है। कम बार सिंचाई करें (प्रत्येक 12-15 दिनों में)।', 'loamy': 'दोमट मिट्टी संतुलित होती है। प्रत्येक 8-10 दिनों में सिंचाई करें।'},
+        'Marathi': {'liters': 'लिटर', 'standard': 'मानक वेळापत्रक (दर १०-१२ दिवसांनी).', 'sandy': 'रेताड माती वेगाने निचरा करते. वारंवार पाणी द्या (दर ५-७ दिवसांनी).', 'clayey': 'काळी माती पाणी धरून ठेवते. कमी वारंवार पाणी द्या (दर १२-१५ दिवसांनी).', 'loamy': 'लोमी माती संतुलित आहे. दर ८-१० दिवसांनी पाणी द्या.'}
+    }
+    l_map = trans.get(language, trans['English'])
+
     factor = 1.0
-    freq_desc = "Standard schedule (every 10-12 days)."
+    freq_desc = l_map['standard']
     
-    if soil_type == "Sandy":
+    # Check for keywords in soil_type (to handle localized options)
+    s_type = str(soil_type).lower()
+    if "sandy" in s_type or "रेताड" in s_type or "रेतीली" in s_type:
         factor = 1.2
-        freq_desc = "Sandy soil drains fast. Irrigate frequently (every 5-7 days)."
-    elif soil_type == "Clayey":
+        freq_desc = l_map['sandy']
+    elif "clayey" in s_type or "चिकनमाती" in s_type or "मिट्टी" in s_type:
         factor = 0.8
-        freq_desc = "Clay retains water. Irrigate less frequently (every 12-15 days)."
-    elif soil_type == "Loamy":
+        freq_desc = l_map['clayey']
+    elif "loamy" in s_type or "पोयटा" in s_type or "दोमट" in s_type:
         factor = 1.0
-        freq_desc = "Loamy soil is balanced. Irrigate every 8-10 days."
+        freq_desc = l_map['loamy']
         
     base = base_water.get(crop, 5000)
     total_water =  int(base * area * factor)
     
-    return f"{total_water} Liters", freq_desc
+    return f"{total_water} {l_map['liters']}", freq_desc
 
 # --- KNOWLEDGE BASE DATA ---
 KNOWLEDGE_BASE = {
@@ -560,7 +700,7 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
              """
              inputs = [prompt]
         
-        text = generate_ai_response_v2(inputs)
+        text = generate_ai_response_v2(inputs, language=language)
         
         import re
         
@@ -571,7 +711,8 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
         
         est_yield = 0.0
         est_prod = 0.0
-        explanation = "AI analysis complete."
+        from utils import t
+        explanation = t('ai_analysis_complete')
         
         if yield_match:
             try: est_yield = float(yield_match.group(1))
@@ -595,16 +736,18 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
         }
         
     except Exception as e:
-        error = f"AI Analysis Failed: {str(e)}"
+        from utils import t
+        error = f"{t('ai_analysis_failed')}: {str(e)}"
         
     return result, error
 
-def get_ai_response(prompt, api_key=None):
+def get_ai_response(prompt, api_key=None, language='English'):
     """
     General purpose AI Chat function.
     Uses 'gemini-flash-latest'.
     """
     try:
-        return generate_ai_response_v2(prompt)
+        return generate_ai_response_v2(prompt, language=language)
     except Exception as e:
-        return f"I am having trouble connecting to the satellite. Please try again. (Error: {str(e)})"
+        from utils import t
+        return f"{t('ai_chat_trouble')} (Error: {str(e)})"
