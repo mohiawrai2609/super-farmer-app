@@ -2,8 +2,11 @@ import streamlit as st
 import os
 import base64
 from logic import get_ai_response
-from utils import apply_custom_style, t, render_bottom_nav
+from utils import apply_custom_style, t, render_bottom_nav, init_session
 from dotenv import load_dotenv
+
+# Init Session
+init_session()
 
 load_dotenv()
 

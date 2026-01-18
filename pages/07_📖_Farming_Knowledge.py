@@ -1,7 +1,10 @@
 import streamlit as st
 from logic import KNOWLEDGE_BASE
-from utils import apply_custom_style, t, render_bottom_nav
+from utils import apply_custom_style, t, render_bottom_nav, init_session
+import pandas as pd
 
+# Init Session
+init_session()
 st.set_page_config(page_title="Farming Knowledge", page_icon="📖", layout="wide")
 # --- LOAD BACKGROUND IMAGE ---
 import os

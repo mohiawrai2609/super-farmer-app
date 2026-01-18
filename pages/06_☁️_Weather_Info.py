@@ -1,8 +1,11 @@
 import streamlit as st
 import os, requests
 from dotenv import load_dotenv
-from utils import apply_custom_style, t, render_bottom_nav
+from utils import apply_custom_style, t, render_bottom_nav, init_session
 from logic import get_weather_data
+
+# Init Session
+init_session()
 from datetime import datetime
 
 load_dotenv()

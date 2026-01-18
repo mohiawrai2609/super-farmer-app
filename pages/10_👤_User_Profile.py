@@ -1,20 +1,12 @@
 # Force reload
 import streamlit as st
-from utils import apply_custom_style, t, save_db, load_db, render_bottom_nav
+from utils import apply_custom_style, t, save_db, load_db, render_bottom_nav, init_session
+
+# Ensure session is initialized (persistent language & user)
+init_session()
 
 st.set_page_config(page_title=t('user_profile'), page_icon="👤", layout="wide")
 apply_custom_style()
-
-# --- AUTO-LOGIN LOGIC ---
-if 'active_user' not in st.session_state or not st.session_state.active_user:
-    if 'user_data' not in st.session_state:
-        st.session_state.user_data = load_db()
-    
-    last_phone = st.session_state.user_data.get('meta', {}).get('last_active_phone')
-    if last_phone:
-        user_obj = st.session_state.user_data.get(str(last_phone))
-        if user_obj:
-            st.session_state.active_user = user_obj
 
 if 'active_user' not in st.session_state or not st.session_state.active_user:
     st.markdown(f"<p style='color: #F44336; font-weight: 800; font-size: 1.2rem; text-align: center; margin-top: 50px;'>{t('login_first')}</p>", unsafe_allow_html=True)

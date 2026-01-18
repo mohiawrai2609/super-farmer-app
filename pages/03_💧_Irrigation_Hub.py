@@ -1,8 +1,11 @@
 import streamlit as st
 from logic import calculate_irrigation
-from utils import apply_custom_style, t, render_bottom_nav
+from utils import apply_custom_style, t, render_bottom_nav, init_session
 import base64
 import os
+
+# Init Session
+init_session()
 
 # Function to encode image
 def get_base64_of_bin_file(bin_file):

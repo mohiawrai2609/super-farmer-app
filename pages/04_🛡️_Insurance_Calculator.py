@@ -1,5 +1,8 @@
 import streamlit as st
-from utils import apply_custom_style, t, render_bottom_nav
+from utils import apply_custom_style, t, render_bottom_nav, init_session
+
+# Init Session
+init_session()
 
 st.set_page_config(page_title=t('insurance'), page_icon="🛡️", layout="wide")
 apply_custom_style()
