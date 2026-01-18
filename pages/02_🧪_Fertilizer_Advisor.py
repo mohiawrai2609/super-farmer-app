@@ -1,12 +1,18 @@
 import streamlit as st
 import os
 import base64
-from utils import apply_custom_style, t, save_db
+from utils import apply_custom_style, t, save_db, load_db
 from logic import get_fertilizer_recommendation
 from PIL import Image
 
 st.set_page_config(page_title=t('fert_advisor'), page_icon="🧪", layout="wide")
 apply_custom_style()
+
+# --- ENSURE STATE INITIALIZED ---
+if 'user_data' not in st.session_state:
+    st.session_state.user_data = load_db()
+if 'active_user' not in st.session_state:
+    st.session_state.active_user = None
 
 # Function to encode image
 def get_base64_of_bin_file(bin_file):
