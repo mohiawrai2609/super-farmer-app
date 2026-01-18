@@ -12,80 +12,69 @@ def get_base64_of_bin_file(bin_file):
 
 st.set_page_config(page_title=t('irrigation'), page_icon="💧", layout="wide")
 
-# Apply Global Style (Sidebar hiding etc.)
-apply_custom_style(blur_bg=False)
+# Apply Global Style
+apply_custom_style(blur_bg=True) # Keep global blur for consistency
 
 # --- LOAD BACKGROUND IMAGE ---
-# Use absolute path relative to this file to be safe
 current_dir = os.path.dirname(os.path.abspath(__file__))
 bg_image_path = os.path.join(os.path.dirname(current_dir), "assets", "irrigation_bg_v2.png")
 
-bg_image_css = ""
+bg_style = ""
 if os.path.exists(bg_image_path):
     try:
         img_base64 = get_base64_of_bin_file(bg_image_path)
-        bg_image_css = f"""
-        [data-testid="stAppViewContainer"], .stApp {{
-            background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.8)), 
-                        url("data:image/png;base64,{img_base64}") no-repeat center center fixed !important;
-            background-size: cover !important;
-        }}
+        # Re-applying to the card as per original "Same" request
+        bg_style = f"""
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9)), 
+                        url("data:image/png;base64,{img_base64}") center center / cover no-repeat !important;
         """
-    except Exception as e:
-        pass
+    except:
+        bg_style = "background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%) !important;"
+else:
+    bg_style = "background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%) !important;"
 
 # --- CUSTOM CSS ---
 st.markdown(f"""
 <style>
-/* 1. Page Background */
-{bg_image_css}
+    /* 1. Page Background - Keep it light */
+    .stApp {{
+        background: #F1F8E9 !important;
+    }}
+    
+    /* 2. Inner Card Style - RESTORING ORIGINAL "FARMER" THEME */
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        {bg_style}
+        border: 2px solid #66BB6A !important;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 30px rgba(27, 94, 32, 0.2) !important;
+        padding: 30px !important;
+    }}
+    
+    /* 3. Text Styling - Dark Green */
+    div[data-testid="stVerticalBlockBorderWrapper"] label,
+    div[data-testid="stVerticalBlockBorderWrapper"] h3,
+    div[data-testid="stVerticalBlockBorderWrapper"] p {{
+        color: #1B5E20 !important;
+        font-weight: 700 !important;
+    }}
+    
+    /* Header Card Adjustments */
+    .header-card {{
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+    }}
 
-/* Hide Default Canvas to show our background */
-#bg-canvas {{
-    display: none !important;
-}}
-
-/* 2. Header Style */
-.header-card {{
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    text-align: center;
-}}
-
-/* 3. Card/Container Style */
-div[data-testid="stVerticalBlockBorderWrapper"] {{
-    background: rgba(255, 255, 255, 0.5) !important;
-    backdrop-filter: blur(8px) !important;
-    border: 2px solid #43A047 !important;
-    border-radius: 20px !important;
-    box-shadow: 0 10px 30px rgba(27, 94, 32, 0.2) !important;
-    padding: 30px !important;
-}}
-
-/* 4. Text Styling for visibility */
-h1, h2, h3, h4, label, p {{
-    color: #1B5E20 !important;
-    font-weight: 700 !important;
-}}
-
-/* 5. Inputs */
-.stTextInput input, .stNumberInput input, div[data-baseweb="select"] > div {{
-    background-color: white !important;
-    color: #1B5E20 !important;
-    border: 1px solid #81C784 !important;
-}}
-
-/* 6. Calculate Button */
-button[kind="primary"] {{
-    background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%) !important;
-    color: white !important;
-    border: none !important;
-    font-weight: bold !important;
-}}
+    /* Inputs */
+    .stTextInput input, .stNumberInput input, div[data-baseweb="select"] > div {{
+        background-color: #FFFFFF !important;
+        color: #1B5E20 !important;
+        border: 1px solid #81C784 !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
