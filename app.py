@@ -325,7 +325,7 @@ def show_dashboard():
     <img src="https://img.icons8.com/ios-filled/50/2C3E50/bell.png" width="22">
     <div style="position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: #FF5252; border-radius: 50%; border: 2px solid white;"></div>
     </div>
-    <a href="User_Profile" target="_top" style="text-decoration: none;">
+    <a href="User_Profile" target="_self" style="text-decoration: none; position: relative; z-index: 1000; cursor: pointer;">
     <img src="https://img.icons8.com/fluency/96/user-male-circle.png" width="45" style="border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
     </a>
     </div>
