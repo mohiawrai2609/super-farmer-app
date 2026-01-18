@@ -61,9 +61,9 @@ if os.path.exists(bg_img_path):
         content: "";
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.4); /* Subtle dark overlay */
-        backdrop-filter: blur(5px); /* The "little blur" requested */
-        -webkit-backdrop-filter: blur(5px);
+        background: rgba(0, 0, 0, 0.45); /* Slightly darker overlay for better blur effect */
+        backdrop-filter: blur(10px); /* Increased blur for better visibility */
+        -webkit-backdrop-filter: blur(10px);
         z-index: -1;
     }}
     """
@@ -77,8 +77,9 @@ else:
         content: "";
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(6px);
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         z-index: -1;
     }
     """
