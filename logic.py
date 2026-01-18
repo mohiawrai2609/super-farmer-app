@@ -107,7 +107,9 @@ def generate_ai_response_v2(prompt, language='English'):
     # Valid Models - Ordered by preference/speed
     models = [
         "gemini-2.0-flash",
+        "gemini-2.0-flash-lite-preview-02-05",
         "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
         "gemini-1.5-pro",
         "gemini-1.0-pro"
     ]
@@ -122,9 +124,9 @@ def generate_ai_response_v2(prompt, language='English'):
 
     for attempt, model_name in enumerate(models):
         try:
-            # Exponential Backoff for retries on same model if needed, but here we cycle models
+            # Add a slight delay between model shifts for better reliability
             if attempt > 0:
-                time.sleep(1 + (attempt * 1))
+                time.sleep(1.5)
             
             api_key = get_api_key()
             if not api_key: raise Exception("No API Key")
@@ -140,15 +142,17 @@ def generate_ai_response_v2(prompt, language='English'):
                 
         except Exception as e:
             last_error = e
-            # Log error for better debugging
             print(f"Model {model_name} failed: {e}")
+            # If rate limited (429), wait a bit more before next model
+            if "429" in str(e):
+                time.sleep(2)
             continue
             
     # --- SIMULATED FALLBACK ---
     fallback_trans = {
-        'English': '⚠️ AI Quota reached. Backup advice: Monitor soil moisture and apply balanced NPK (19:19:19) if growth is stunted. Check for pests daily.',
-        'Hindi': '⚠️ AI कोटा समाप्त हो गया है। बैकअप सलाह: मिट्टी की नमी की निगरानी करें और यदि विकास बाधित हो तो संतुलित NPK (19:19:19) का उपयोग करें। दैनिक कीटों की जांच करें।',
-        'Marathi': '⚠️ AI कोटा संपला आहे. बॅकअप सल्ला: मातीचा ओलावा तपासा आणि वाढ खुंटली असल्यास संतुलित NPK (19:19:19) वापरा. दररोज कीटकांची तपासणी करा.'
+        'English': '🤖 AI is currently busy. Quick Tip: Check soil moisture levels. If leaves are yellowing, ensure proper drainage and apply balanced fertilizer.',
+        'Hindi': '🤖 AI अभी व्यस्त है। त्वरित सुझाव: मिट्टी में नमी के स्तर की जाँच करें। यदि पत्तियां पीली पड़ रही हैं, तो उचित जल निकासी सुनिश्चित करें।',
+        'Marathi': '🤖 AI सध्या व्यस्त आहे. त्वरित टीप: मातीतील ओलावा तपासा. पाने पिवळी पडत असल्यास, पाण्याचा योग्य निचरा असल्याची खात्री करा.'
     }
     
     return fallback_trans.get(language, fallback_trans['English'])
@@ -160,10 +164,18 @@ def generate_ai_response_stream(prompt, language='English'):
     lang_instruction = f"\n\nIMPORTANT: Response must be entirely in {language} language."
     full_prompt = prompt + lang_instruction if isinstance(prompt, str) else prompt + [lang_instruction]
     
-    models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
+    models = [
+        "gemini-2.0-flash", 
+        "gemini-2.0-flash-lite-preview-02-05",
+        "gemini-1.5-flash", 
+        "gemini-1.5-flash-8b",
+        "gemini-1.5-pro"
+    ]
     
-    for model_name in models:
+    for attempt, model_name in enumerate(models):
         try:
+            if attempt > 0:
+                time.sleep(1.2)
             api_key = get_api_key()
             if not api_key: break
             client = genai.Client(api_key=api_key)
@@ -175,7 +187,9 @@ def generate_ai_response_stream(prompt, language='English'):
                 if chunk.text:
                     yield chunk.text
             return # Exit if successful
-        except Exception:
+        except Exception as e:
+            if "429" in str(e):
+                time.sleep(2)
             continue
             
     # Fallback if all strictly fail
