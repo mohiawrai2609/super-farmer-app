@@ -268,7 +268,7 @@ def apply_custom_style(blur_bg=True):
         /* Hide Default Streamlit Elements */
         #MainMenu {{visibility: hidden;}}
         footer {{visibility: hidden;}}
-        header {{visibility: hidden;}} w
+        header {{visibility: hidden;}}
         /* 10. HIDE SIDEBAR & TOP HEADER COMPLETELY */
         [data-testid="stSidebar"], div[data-testid="stSidebar"] {{
             display: none !important;
