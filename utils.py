@@ -275,11 +275,11 @@ def apply_custom_style(blur_bg=True):
         }}
         
         button[data-testid="stBaseButton-headerNoPadding"], 
-        header[data-testid="stHeader"] {
+        header[data-testid="stHeader"] {{
             display: none !important;
             height: 0 !important;
             visibility: hidden !important;
-        }
+        }}
 
         /* Adjust page top padding since header is gone */
         .stApp {{
