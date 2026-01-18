@@ -165,7 +165,7 @@ header[data-testid="stHeader"] {
     border-radius: 30px !important;
     border: 1px solid rgba(255,255,255,0.3) !important;
     padding: 10px !important;
-    z-index: 99999 !important; /* Increased Z-Index just in case */
+    z-index: 2000 !important; /* High Z-Index to stay above everything */
 }
 
 div[data-testid="stChatInput"] textarea, 
