@@ -103,54 +103,54 @@ def generate_ai_response_v2(prompt, language='English'):
     else:
         # If it's a list (e.g. for images), append instruction to the last text part or as a new part
         full_prompt = prompt + [lang_instruction]
-    # Valid Models - Updated to latest available
+    
+    # Valid Models - Ordered by preference/speed
     models = [
         "gemini-2.0-flash",
-        "gemini-1.5-flash"
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-1.0-pro"
     ]
     last_error = None
     
     # Try to use Cache if prompt is simple string
     if isinstance(prompt, str):
         try:
-            # Try the first model with cache
             return _cached_ai_call(models[0], str(full_prompt))
         except Exception:
-            pass # If cache/call fails, fall through to robust loop
+            pass 
 
     for attempt, model_name in enumerate(models):
         try:
-            # Exponential Backoff with Jitter
-            wait_time = 1 + (attempt * 2) + random.uniform(0, 1)
-            time.sleep(wait_time)
+            # Exponential Backoff for retries on same model if needed, but here we cycle models
+            if attempt > 0:
+                time.sleep(1 + (attempt * 1))
             
-            # Direct call (handling lists/images if needed)
             api_key = get_api_key()
             if not api_key: raise Exception("No API Key")
             client = genai.Client(api_key=api_key)
+            
             response = client.models.generate_content(
                 model=model_name,
                 contents=full_prompt
             )
             
-            # Verify response validity
             if response and response.text:
                 return response.text
                 
         except Exception as e:
             last_error = e
+            # Log error for better debugging
+            print(f"Model {model_name} failed: {e}")
             continue
             
-    # --- SIMULATED FALLBACK (When Google AI is down/exhausted) ---
+    # --- SIMULATED FALLBACK ---
     fallback_trans = {
-        'English': '⚠️ AI Quota Exceeded. Showing offline backup advice.\n\nBackup Advice: Ensure soil moisture is consistent and check for visible pests. Apply standard NPK if growth is slow.',
-        'Hindi': '⚠️ AI कोटा समाप्त हो गया है। ऑफ़लाइन बैकअप सलाह दिखा रहा है।\n\nबैकअप सलाह: सुनिश्चित करें कि मिट्टी की नमी बनी रहे और दिखाई देने वाले कीटों की जांच करें। यदि विकास धीमा है तो मानक NPK का प्रयोग करें।',
-        'Marathi': '⚠️ AI कोटा संपला आहे. ऑफलाइन बॅकअप सल्ला दाखवत आहे.\n\nबॅकअप सल्ला: मातीचा ओलावा कायम असल्याची खात्री करा आणि दिसणाऱ्या कीटकांची तपासणी करा. वाढ संथ असल्यास मानक NPK वापरा.'
+        'English': '⚠️ AI Quota reached. Backup advice: Monitor soil moisture and apply balanced NPK (19:19:19) if growth is stunted. Check for pests daily.',
+        'Hindi': '⚠️ AI कोटा समाप्त हो गया है। बैकअप सलाह: मिट्टी की नमी की निगरानी करें और यदि विकास बाधित हो तो संतुलित NPK (19:19:19) का उपयोग करें। दैनिक कीटों की जांच करें।',
+        'Marathi': '⚠️ AI कोटा संपला आहे. बॅकअप सल्ला: मातीचा ओलावा तपासा आणि वाढ खुंटली असल्यास संतुलित NPK (19:19:19) वापरा. दररोज कीटकांची तपासणी करा.'
     }
     
-    if last_error:
-        print(f"AI Error: {last_error}")
-        
     return fallback_trans.get(language, fallback_trans['English'])
 
 def generate_ai_response_stream(prompt, language='English'):
@@ -160,7 +160,7 @@ def generate_ai_response_stream(prompt, language='English'):
     lang_instruction = f"\n\nIMPORTANT: Response must be entirely in {language} language."
     full_prompt = prompt + lang_instruction if isinstance(prompt, str) else prompt + [lang_instruction]
     
-    models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
     
     for model_name in models:
         try:
@@ -178,8 +178,10 @@ def generate_ai_response_stream(prompt, language='English'):
         except Exception:
             continue
             
-    # Fallback if all fail
-    yield generate_ai_response_v2(prompt, language=language)
+    # Fallback if all strictly fail
+    fallback_text = generate_ai_response_v2(prompt, language=language)
+    for char in fallback_text:
+        yield char
 
 def get_ai_response(prompt, api_key=None, language='English'):
     """
@@ -738,13 +740,4 @@ def get_yield_prediction(state, crop, season, area, soil="Loamy", weather="Norma
         
     return result, error
 
-def get_ai_response(prompt, api_key=None, language='English'):
-    """
-    General purpose AI Chat function.
-    Uses 'gemini-flash-latest'.
-    """
-    try:
-        return generate_ai_response_v2(prompt, language=language)
-    except Exception as e:
-        from utils import t
-        return f"{t('ai_chat_trouble')} (Error: {str(e)})"
+# Duplicate definition removed.
