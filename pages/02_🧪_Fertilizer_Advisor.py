@@ -144,7 +144,7 @@ else: # Manual
     with col1:
         st.markdown(f'<h3 style="color:white;">🧪 {t("soil_health")}</h3>', unsafe_allow_html=True)
         # Check for saved profile
-        user = st.session_state.get('active_user', {})
+        user = st.session_state.get('active_user') or {}
         def_n = user.get('soil_n', 50)
         def_p = user.get('soil_p', 50)
         def_k = user.get('soil_k', 50)
