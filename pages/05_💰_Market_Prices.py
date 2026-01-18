@@ -1,11 +1,7 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
-from utils import apply_custom_style, t, render_bottom_nav, init_session
-
-# Init Session
-init_session()
-
+from utils import apply_custom_style, t, render_bottom_nav
 from logic import get_market_trends_data, get_mandi_prices
 import pandas as pd
 import plotly.express as px

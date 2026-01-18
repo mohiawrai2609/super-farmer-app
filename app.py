@@ -4,11 +4,10 @@ import json
 import textwrap
 import base64
 from dotenv import load_dotenv
-from utils import apply_custom_style, t, load_db, save_db, render_bottom_nav, init_session
+from utils import apply_custom_style, t, load_db, save_db, render_bottom_nav
 from logic import get_weather_data
 
 # Init Session
-init_session()
 from datetime import datetime
 
 # Load environment variables

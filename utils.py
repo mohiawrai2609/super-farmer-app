@@ -1452,20 +1452,11 @@ TRANSLATIONS = {
     }
 }
 
-def t(key):
-    # Safe import inside function to avoid circular issues
+# --- SESSION INITIALIZATION (INTERNAL) ---
+def _ensure_session():
     import streamlit as st
-    
-    # Ensure session is initialized (auto-load language if missing)
-    if 'language' not in st.session_state:
-        init_session()
-        
-    lang = st.session_state.get('language', 'English')
-    return TRANSLATIONS.get(lang, {}).get(key, key)
-
-# --- SESSION INITIALIZATION ---
-def init_session():
-    import streamlit as st
+    import os
+    import json
     
     # 1. Load DB if needed
     if 'user_data' not in st.session_state:
@@ -1486,6 +1477,16 @@ def init_session():
             st.session_state.language = st.session_state.active_user['language']
         else:
             st.session_state.language = 'English'
+
+def t(key):
+    import streamlit as st
+    
+    # Auto-initialize session on first translation call
+    if 'language' not in st.session_state:
+        _ensure_session()
+        
+    lang = st.session_state.get('language', 'English')
+    return TRANSLATIONS.get(lang, {}).get(key, key)
 
 # --- PERSISTENCE HELPERS ---
 DB_FILE = "user_db.json"

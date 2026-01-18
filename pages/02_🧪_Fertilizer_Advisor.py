@@ -1,11 +1,8 @@
 import streamlit as st
 import os
 import base64
-from utils import apply_custom_style, t, save_db, load_db, init_session
+from utils import apply_custom_style, t, save_db, load_db
 from logic import get_fertilizer_recommendation
-
-# Init Session
-init_session()
 from PIL import Image
 
 st.set_page_config(page_title=t('fert_advisor'), page_icon="🧪", layout="wide")

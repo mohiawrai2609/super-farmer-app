@@ -1,9 +1,6 @@
 # Force reload
 import streamlit as st
-from utils import apply_custom_style, t, save_db, load_db, render_bottom_nav, init_session
-
-# Ensure session is initialized (persistent language & user)
-init_session()
+from utils import apply_custom_style, t, save_db, load_db, render_bottom_nav
 
 st.set_page_config(page_title=t('user_profile'), page_icon="👤", layout="wide")
 apply_custom_style()

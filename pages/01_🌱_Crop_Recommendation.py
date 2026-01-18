@@ -2,10 +2,7 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 from logic import get_crop_recommendation, get_ai_explanation, get_weather_data
-from utils import apply_custom_style, t, init_session
-
-# Ensure session is initialized (persistent language & user)
-init_session()
+from utils import apply_custom_style, t
 
 load_dotenv()
 
