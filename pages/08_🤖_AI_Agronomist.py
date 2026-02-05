@@ -1,13 +1,14 @@
 import streamlit as st
 import os
 import base64
-from logic import get_ai_response
-from utils import apply_custom_style, t, render_bottom_nav
 from dotenv import load_dotenv
 
-load_dotenv()
-
 st.set_page_config(page_title="AI Agronomist", page_icon="🤖", layout="wide")
+
+from logic import get_ai_response
+from utils import apply_custom_style, t, render_bottom_nav
+
+load_dotenv()
 
 # Apply Global Style - Blurred Background as base
 apply_custom_style(blur_bg=True)
@@ -62,8 +63,8 @@ if os.path.exists(bg_img_path):
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0, 0, 0, 0.4); /* Elegant dark overlay */
-        backdrop-filter: blur(20px) !important; 
-        -webkit-backdrop-filter: blur(20px) !important;
+        backdrop-filter: blur(5px) !important; 
+        -webkit-backdrop-filter: blur(5px) !important;
         z-index: -1;
     }}
     """
@@ -78,8 +79,8 @@ else:
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
+        backdrop-filter: blur(5px) !important;
+        -webkit-backdrop-filter: blur(5px) !important;
         z-index: -1;
     }
     """

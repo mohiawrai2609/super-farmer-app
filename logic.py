@@ -8,7 +8,7 @@ import random
 from datetime import datetime
 import pandas as pd
 
-load_dotenv()
+load_dotenv(override=True)
 
 # --- GEMINI AI CONFIGURATION ---
 def get_api_key():
@@ -142,10 +142,19 @@ def generate_ai_response_v2(prompt, language='English'):
                 
         except Exception as e:
             last_error = e
-            print(f"Model {model_name} failed: {e}")
-            # If rate limited (429), wait a bit more before next model
-            if "429" in str(e):
+            error_str = str(e)
+            print(f"Model {model_name} failed: {error_str}")
+            
+            # Quota Check
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                if attempt == len(models) - 1: # Only return error if ALL models fail or it's the last one
+                     return f"⚠️ System Error: AI Quota Exceeded. The API key has reached its daily limit."
                 time.sleep(2)
+                continue
+                
+            # Invalid Key Check
+            if "API key not valid" in error_str or "KEY_INVALID" in error_str:
+                return f"⚠️ System Error: Invalid API Key. Please update your .env file."
             continue
             
     # --- SIMULATED FALLBACK ---
@@ -183,16 +192,22 @@ def generate_ai_response_stream(prompt, language='English'):
                 model=model_name,
                 contents=full_prompt
             )
+            
+            has_content = False
             for chunk in responses:
                 if chunk.text:
+                    has_content = True
                     yield chunk.text
-            return # Exit if successful
+            
+            if has_content:
+                return # Exit ONLY if we actually got something
+                
         except Exception as e:
             if "429" in str(e):
                 time.sleep(2)
             continue
             
-    # Fallback if all strictly fail
+    # Fallback if all strictly fail OR no content yielded
     fallback_text = generate_ai_response_v2(prompt, language=language)
     for char in fallback_text:
         yield char
@@ -221,13 +236,47 @@ def get_ai_explanation(predicted_crop, N, P, K, temp, hum, ph, rain, language='E
         from utils import t
         return t('ai_err_general')
 
-def get_weather_data(city, api_key, language='English'):
+def get_weather_api_key():
+    try:
+        if "WEATHER_API_KEY" in st.secrets:
+            return st.secrets["WEATHER_API_KEY"]
+    except:
+        pass
+    return os.getenv("WEATHER_API_KEY")
+
+def get_weather_data(city, api_key=None, language='English'):
     """
     Fetches real weather data from OpenWeatherMap API with robust fallback.
+    Now force-returns Mock Data if API fails, ensuring UI never breaks.
     """
+    from utils import t
+    
+    # default mock data generator
+    def get_mock_data():
+        return {
+            "main": {
+                "temp": 28.5, 
+                "humidity": 65, 
+                "feels_like": 30.0,
+                "temp_min": 26.0,
+                "temp_max": 31.0
+            },
+            "weather": [{"description": t('partly_cloudy'), "icon": "02d"}],
+            "wind": {"speed": 3.5},
+            "rain": {"1h": 0.0},
+            "sys": {"country": "IN"},
+            "name": city,
+            "cod": 200,
+            "mock": True
+        }
+
+    if not api_key:
+        api_key = get_weather_api_key()
+
+    # If no key or placeholder, return Mock immediately
     if not api_key or "your_" in api_key:
-         from utils import t
-         return None, t('ai_err_api')
+         # Return Mock Data + Warning Message
+         return get_mock_data(), t('simulated_data_warn')
     
     # Map app languages to OWM codes
     lang_map = {'English': 'en', 'Hindi': 'hi', 'Marathi': 'mr'}
@@ -242,25 +291,15 @@ def get_weather_data(city, api_key, language='English'):
     }
     
     try:
-        response = requests.get(base_url, params=params)
+        response = requests.get(base_url, params=params, timeout=3)
         if response.status_code == 200:
             return response.json(), None
         else:
-            # Fallback for "Interview Ready" stability
-            mock_data = {
-                "main": {"temp": 28.5, "humidity": 65, "feels_like": 30.0},
-                "weather": [{"description": t('partly_cloudy'), "icon": "02d"}],
-                "wind": {"speed": 3.5},
-                "rain": {"1h": 0.0},
-                "sys": {"country": "IN"},
-                "name": city,
-                "cod": 200,
-                "mock": True # Internal flag
-            }
-            from utils import t
-            return mock_data, f"{t('ai_err_api_401')} {city}."
+            # Fallback for API errors (e.g. 401, 404)
+            return get_mock_data(), f"{t('ai_err_api_401')} {city}."
     except Exception as e:
-        return None, str(e)
+        # Fallback for Connection errors
+        return get_mock_data(), str(e)
 
 def get_market_trends_data(commodity="Rice", base_price=None):
     # Simulated trend data for the LAST 7 DAYS

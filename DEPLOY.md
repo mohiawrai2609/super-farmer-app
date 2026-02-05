@@ -32,3 +32,4 @@ WEATHER_API_KEY = "your_actual_openweathermap_key_here"
 ### Troubleshooting
 - **Background Images**: If background images don't load, ensure they are in the `assets/` folder and that folder is uploaded to GitHub.
 - **API Errors**: If you see "API Key Error", double-check the **Secrets** usage in Step 3.
+- **Page Config Error**: If you see `StreamlitAPIException: set_page_config()`, ensure `st.set_page_config` is the **first** Streamlit command in your script, before importing other modules that might use Streamlit.

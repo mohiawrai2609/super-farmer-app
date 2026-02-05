@@ -1,12 +1,48 @@
 import streamlit as st
 import os
+import pandas as pd
 from dotenv import load_dotenv
+
+st.set_page_config(page_title="🌱 Smart Crop Recommendation", page_icon="🌱", layout="wide")
+
 from logic import get_crop_recommendation, get_ai_explanation, get_weather_data
 from utils import apply_custom_style, t
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 load_dotenv()
 
-st.set_page_config(page_title=t('crop_doc'), page_icon="🌱", layout="wide")
+# --- CUSTOM MODEL CACHING ---
+@st.cache_resource
+def train_model(df):
+    try:
+        # Standardize column names
+        df.columns = [c.strip().lower() for c in df.columns]
+        
+        # Expected columns: n, p, k, temperature, humidity, ph, rainfall, label
+        required_cols = ['n', 'p', 'k', 'temperature', 'humidity', 'ph', 'rainfall', 'label']
+        if not all(col in df.columns for col in required_cols):
+            return None, "CSV must contain columns: N, P, K, temperature, humidity, ph, rainfall, label"
+            
+        X = df[['n', 'p', 'k', 'temperature', 'humidity', 'ph', 'rainfall']]
+        y = df['label']
+        
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X, y)
+        
+        # Calculate accuracy for display
+        acc = 0.95 # Dummy high accuracy if no split, or do a split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        model_test = RandomForestClassifier(n_estimators=100, random_state=42)
+        model_test.fit(X_train, y_train)
+        preds = model_test.predict(X_test)
+        acc = accuracy_score(y_test, preds)
+        
+        return model, f"{acc:.2%}"
+    except Exception as e:
+        return None, str(e)
+
 # --- LOAD BACKGROUND IMAGE ---
 import os
 import base64
@@ -119,6 +155,44 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# --- MODEL UPLOADER ---
+with st.expander("📂 Upload Custom Crop Dataset (CSV)", expanded=False):
+    uploaded_file = st.file_uploader("Upload CSV", type=['csv'], help="Required columns: N, P, K, temperature, humidity, ph, rainfall, label")
+    
+    df = None
+    default_csv = "Crop_recommendation.csv"
+    
+    # Priority 1: User Upload
+    if uploaded_file is not None:
+        try:
+            df = pd.read_csv(uploaded_file)
+            st.success("✅ Custom CSV Uploaded")
+        except Exception as e:
+            st.error(f"Error reading uploaded file: {e}")
+            
+    # Priority 2: Local Default File
+    elif os.path.exists(default_csv):
+        try:
+            df = pd.read_csv(default_csv)
+            st.info(f"ℹ️ using local dataset: {default_csv}")
+        except Exception as e:
+            st.warning(f"Could not read local {default_csv}: {e}")
+
+    if df is not None:
+        try:
+            st.dataframe(df.head(3), height=100)
+            
+            rf_model, status = train_model(df)
+            if rf_model:
+                st.session_state['custom_model'] = rf_model
+                if 'model_trained' not in st.session_state:
+                    st.session_state['model_trained'] = True
+                    st.success(f"✅ Model Trained Successfully! Accuracy: {status}")
+            else:
+                st.error(f"❌ Error: {status}")
+        except Exception as e:
+            st.error(f"Error processing dataset: {e}")
+
 # Two Columns: Inputs & Results
 col1, col2 = st.columns([1, 1], gap="large")
 
@@ -174,7 +248,24 @@ with col2:
             rainfall = 200 if "rain" in weather.get("weather", [{}])[0].get("description", "").lower() else 100 
             
             lang = st.session_state.get('language', 'English')
-            crop, reason = get_crop_recommendation(n, p, k, temp, humidity, ph, rainfall, language=lang)
+            
+            # --- MODEL PREDICTION vs HYBRID LOGIC ---
+            if 'custom_model' in st.session_state and st.session_state['custom_model'] is not None:
+                try:
+                    # Predict using the uploaded CSV model
+                    model = st.session_state['custom_model']
+                    input_data = pd.DataFrame([[n, p, k, temp, humidity, ph, rainfall]], 
+                                            columns=['n', 'p', 'k', 'temperature', 'humidity', 'ph', 'rainfall'])
+                    prediction = model.predict(input_data)[0]
+                    crop = prediction.title()
+                    reason = t('model_based_reason') if st.session_state.get('language') == 'English' else "Based on your uploaded dataset pattern."
+                except Exception as e:
+                     st.warning(f"Model prediction failed ({str(e)}). Falling back to hybrid logic.")
+                     crop, reason = get_crop_recommendation(n, p, k, temp, humidity, ph, rainfall, language=lang)
+            else:
+                # Use default fallback logic
+                crop, reason = get_crop_recommendation(n, p, k, temp, humidity, ph, rainfall, language=lang)
+            
             ai_explanation = get_ai_explanation(crop, n, p, k, temp, humidity, ph, rainfall, language=lang)
 
             # Premium Result Display using utils.py classes
@@ -204,6 +295,6 @@ with col2:
             st.json(st.session_state['weather_data'])
 
 # Render Bottom Navigation
-from utils import render_bottom_nav
+from utils import render_bottom_nav, t # re-import t to be safe
 render_bottom_nav(active_tab='Crops')
 st.markdown("<br><br><br>", unsafe_allow_html=True)

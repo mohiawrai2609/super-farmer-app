@@ -1,12 +1,14 @@
 import streamlit as st
 import os, requests
 from dotenv import load_dotenv
+
+st.set_page_config(page_title="☁️ Weather Info", page_icon="☁️", layout="wide")
+
 from utils import apply_custom_style, t, render_bottom_nav
 from logic import get_weather_data
 from datetime import datetime
 
 load_dotenv()
-st.set_page_config(page_title=t('weather_det'), page_icon="☁️", layout="wide")
 apply_custom_style()
 
 # --- HEADER (Vision Pro Style) ---

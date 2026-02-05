@@ -1,11 +1,14 @@
 import streamlit as st
 import os
+import base64
 from dotenv import load_dotenv
+
+st.set_page_config(page_title="💰 Market Prices", page_icon="💰", layout="wide")
+
 from utils import apply_custom_style, t, render_bottom_nav
 from logic import get_market_trends_data, get_mandi_prices
 import pandas as pd
 import plotly.express as px
-import base64
 import random
 
 load_dotenv()
@@ -16,7 +19,7 @@ def get_base64_of_bin_file(bin_file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-st.set_page_config(page_title=t('mandi'), page_icon="💰", layout="wide")
+apply_custom_style()
 apply_custom_style()
 
 # --- LOAD BACKGROUND IMAGE ---

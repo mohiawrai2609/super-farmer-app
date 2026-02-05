@@ -1,11 +1,13 @@
 import streamlit as st
 import os
 import base64
+
+st.set_page_config(page_title="🧪 Fertilizer Advisor", page_icon="🧪", layout="wide")
+
 from utils import apply_custom_style, t, save_db, load_db
 from logic import get_fertilizer_recommendation
 from PIL import Image
 
-st.set_page_config(page_title=t('fert_advisor'), page_icon="🧪", layout="wide")
 apply_custom_style()
 
 # --- ENSURE STATE INITIALIZED ---

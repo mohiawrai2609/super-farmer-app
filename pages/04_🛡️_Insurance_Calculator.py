@@ -1,7 +1,11 @@
 import streamlit as st
+import os
+import base64
+
+st.set_page_config(page_title="🛡️ Insurance Calculator", page_icon="🛡️", layout="wide")
+
 from utils import apply_custom_style, t, render_bottom_nav
 
-st.set_page_config(page_title=t('insurance'), page_icon="🛡️", layout="wide")
 apply_custom_style()
 
 # --- HEADER (Vision Pro Style) ---

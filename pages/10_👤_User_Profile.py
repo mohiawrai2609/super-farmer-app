@@ -1,8 +1,10 @@
 # Force reload
 import streamlit as st
+
+st.set_page_config(page_title="👤 User Profile", page_icon="👤", layout="wide")
+
 from utils import apply_custom_style, t, save_db, load_db, render_bottom_nav
 
-st.set_page_config(page_title=t('user_profile'), page_icon="👤", layout="wide")
 apply_custom_style()
 
 if 'active_user' not in st.session_state or not st.session_state.active_user:

@@ -1,16 +1,18 @@
 import streamlit as st
-from logic import calculate_irrigation
-from utils import apply_custom_style, t, render_bottom_nav
-import base64
 import os
+import base64
+from utils import t # Safe import for page title if used immediately, but better to hardcode or use later
+
+st.set_page_config(page_title="💧 Irrigation Hub", page_icon="💧", layout="wide")
+
+from logic import calculate_irrigation
+from utils import apply_custom_style, render_bottom_nav
 
 # Function to encode image
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
-
-st.set_page_config(page_title=t('irrigation'), page_icon="💧", layout="wide")
 
 # Apply Global Style (Sidebar hiding etc.)
 apply_custom_style(blur_bg=False)
@@ -27,9 +29,17 @@ if os.path.exists(bg_image_path):
         # Reduced white overlay for better visibility of the "Farmer Scene"
         bg_image_css = f"""
         [data-testid="stAppViewContainer"], .stApp {{
-            background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.6)), 
-                        url("data:image/png;base64,{img_base64}") no-repeat center center fixed !important;
+            background: url("data:image/png;base64,{img_base64}") no-repeat center center fixed !important;
             background-size: cover !important;
+        }}
+        .stApp::before {{
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.5); /* Light overlay */
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            z-index: -1;
         }}
         """
     except Exception as e:

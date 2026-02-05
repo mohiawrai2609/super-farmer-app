@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
+
+st.set_page_config(page_title="Yield Prediction", page_icon="📊", layout="wide")
+
 from logic import get_yield_prediction
 from utils import apply_custom_style, t, render_bottom_nav
-
-st.set_page_config(page_title=t('yield_pred'), page_icon="📊", layout="wide")
 
 # --- LOAD BACKGROUND IMAGE ---
 import os

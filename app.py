@@ -4,22 +4,23 @@ import json
 import textwrap
 import base64
 from dotenv import load_dotenv
-from utils import apply_custom_style, t, load_db, save_db, render_bottom_nav
-from logic import get_weather_data
 
-# Init Session
-from datetime import datetime
-
-# Load environment variables
-load_dotenv()
-
-# Page Config
+# Page Config MUST be first
 st.set_page_config(
     page_title="Farmer Super App",
     page_icon="🌾",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Load environment variables
+load_dotenv()
+
+from utils import apply_custom_style, t, load_db, save_db, render_bottom_nav, get_daily_wisdom
+from logic import get_weather_data
+
+# Init Session
+from datetime import datetime
 
 # --- INLINE CSS OVERRIDE (Forced Orange Theme) ---
 # --- APPLY CUSTOM STYLES ---
@@ -55,6 +56,21 @@ def get_secret(key):
     except:
         pass
     return os.getenv(key)
+
+def get_local_img(file_path):
+    # Try to load local file and convert to base64
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "rb") as f:
+                data = f.read()
+                encoded = base64.b64encode(data).decode()
+            return f"data:image/jpeg;base64,{encoded}"
+        except:
+            pass
+    # Fallback to a reliable online placeholder if local fails
+    return "https://img.icons8.com/fluency/96/video-call.png"
+
+
 
 # --- NAVIGATION FUNCTIONS ---
 def navigate_to(view):
@@ -639,6 +655,230 @@ def show_dashboard():
 
 
     
+
+    # --- DAILY WISDOM & TRENDS (Mast Section) ---
+    st.markdown(f'<div class="section-headline">{t("daily_wisdom")}</div>', unsafe_allow_html=True)
+    
+    # Get Dynamic Content
+    daily = get_daily_wisdom(st.session_state.get('language', 'English'))
+
+    # Custom CSS for this section
+    st.markdown("""
+    <style>
+    .wisdom-card {
+        border-radius: 20px;
+        padding: 20px;
+        color: white;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .wisdom-card:hover {
+        transform: translateY(-5px);
+    }
+    .wisdom-card h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0 0 5px 0;
+        font-family: 'Poppins', sans-serif;
+    }
+    .wisdom-card p {
+        font-size: 0.9rem;
+        opacity: 0.95;
+        margin: 0;
+        line-height: 1.4;
+    }
+    .card-icon-bg {
+        position: absolute;
+        right: -10px;
+        bottom: -10px;
+        font-size: 5rem;
+        opacity: 0.2;
+        transform: rotate(-15deg);
+    }
+    
+    /* Gradients */
+    .bg-tip { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .bg-scheme { background: linear-gradient(135deg, #3a7bd5 0%, #3a6073 100%); }
+    .bg-market { background: linear-gradient(135deg, #FF8008 0%, #FFC837 100%); }
+    </style>
+    """, unsafe_allow_html=True)
+
+    wc1, wc2 = st.columns(2)
+    
+    with wc1:
+        st.markdown(f"""
+        <div class="wisdom-card bg-tip">
+            <div class="card-icon-bg">💡</div>
+            <h3>{t('tip_of_day')}</h3>
+            <p>{daily['tip']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Date for Market Update
+        from datetime import datetime
+        today_str = datetime.now().strftime("%d %b %Y")
+        
+        st.markdown(f"""
+        <div class="wisdom-card bg-market">
+            <div class="card-icon-bg">📈</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>{t('market_alert')}</h3>
+                <span style="font-size: 0.7rem; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 10px;">{today_str}</span>
+            </div>
+            <p>{daily['market']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with wc2:
+        st.markdown(f"""
+        <div class="wisdom-card bg-scheme" style="height: 100%;">
+            <div class="card-icon-bg">🏛️</div>
+            <h3>{t('govt_scheme')}</h3>
+            <p>{daily['scheme']}</p>
+            <a href="Farming_Knowledge" target="_self" style="text-decoration: none; color: white;">
+                <div style="margin-top: 15px; background: rgba(255,255,255,0.25); padding: 8px 18px; border-radius: 15px; display: inline-block; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: background 0.3s;">
+                    {t('check_eligibility')}
+                </div>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+
+
+    # --- TRENDING VIDEOS (Horizontal Scroll) ---
+    st.markdown(f'<div class="section-headline">{t("trending_videos")}</div>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <style>
+    .video-scroller {
+        display: flex;
+        overflow-x: auto;
+        gap: 15px;
+        padding-bottom: 10px;
+        scrollbar-width: none; /* Firefox */
+    }
+    .video-scroller::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+    .video-card {
+        min-width: 250px;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        text-decoration: none;
+        position: relative;
+        transition: transform 0.2s;
+    }
+    .video-card:hover {
+        transform: scale(1.02);
+    }
+    .video-thumb {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+    }
+    .play-icon-overlay {
+        position: absolute;
+        top: 50px;
+        left: 105px;
+        background: rgba(0,0,0,0.6);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+    }
+    .video-title {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1.3;
+    }
+    .poll-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 25px;
+        color: white;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Real YouTube Video Data (Using Search Query Links for 100% Reliability)
+    # Load images from local assets if available
+    v_drone = get_local_img(os.path.join("assets", "video_drone.jpg"))
+    v_sugar = get_local_img(os.path.join("assets", "video_sugarcane.jpg"))
+    v_fert = get_local_img(os.path.join("assets", "video_fertilizer.jpg"))
+    v_drone2 = get_local_img(os.path.join("assets", "video_drone2.jpg"))
+
+    videos = [
+        {
+            "title": "Drone se dawai chidkau | Drone Spraying", 
+            "img": v_drone, 
+            "url": "https://www.youtube.com/results?search_query=drone+spraying+indian+farmer+hindi"
+        },
+        {
+            "title": "Ganne ki kheti me double munafa | Sugarcane Tips", 
+            "img": v_sugar, 
+            "url": "https://www.youtube.com/results?search_query=sugarcane+farming+tips+indian+farmer+hindi"
+        },
+        {
+            "title": "Organic Fertilizer making at home | Desi Jugad", 
+            "img": v_fert,
+            "url": "https://www.youtube.com/results?search_query=homemade+organic+fertilizer+hindi"
+        },
+        {
+            "title": "Kisan Drone Yojana 2025 | Full Info", 
+            "img": v_drone2,
+            "url": "https://www.youtube.com/results?search_query=kisan+drone+yojana+2025+hindi"
+        }
+    ]
+
+    video_html = '<div class="video-scroller">'
+    for v in videos:
+        video_html += f"""<a href="{v['url']}" target="_blank" style="text-decoration: none;">
+<div class="video-card">
+<div style="position:relative;">
+<img src="{v['img']}" class="video-thumb">
+<div class="play-icon-overlay">▶</div>
+</div>
+<div class="video-title">{v['title']}</div>
+</div>
+</a>"""
+    video_html += '</div>'
+    st.markdown(video_html, unsafe_allow_html=True)
+
+    # --- COMMUNITY POLL ---
+    st.markdown(f'<div class="section-headline">{t("community_poll")}</div>', unsafe_allow_html=True)
+    
+    with st.container():
+        st.markdown(f"""
+        <div class="poll-container">
+            <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 20px;">🤔 {t('poll_q')}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        # We use standard streamlit widgets but styled to float over the gradient card concept visually if possible, 
+        # or simplified. Placing widgets inside HTML is hard, so we put them below.
+        
+        poll_opts = [t('poll_opt1'), t('poll_opt2'), t('poll_opt3')]
+        selected_poll = st.radio("Poll Options", poll_opts, label_visibility="collapsed")
+        
+        if st.button(t('vote_now'), key='poll_btn'):
+            st.success(t('updated'))
+            st.balloons()
+
+
     # --- RENDER BOTTOM NAV ---
     render_bottom_nav(active_tab='Home')
     st.markdown("<br><br><br>", unsafe_allow_html=True)
